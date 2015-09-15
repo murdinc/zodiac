@@ -13,8 +13,21 @@ body {
     font-size:12px;
 }
 
-.cipher
-{
+.top-bar {
+    background-color:#000;
+    margin-bottom: 10px;
+
+}
+
+.top-bar h1 {
+    margin-bottom: 0;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: -1px;
+    color: #FFF;
+}
+
+.cipher {
     font-family:'Zodiac Cipher',Sans-Serif;
     width:800px;
     margin:10px auto;
@@ -23,8 +36,7 @@ body {
     padding:20px;
 }
 
-.plain
-{
+.plain {
     font-family:'Conv_Sansus Webissimo-Regular',Sans-Serif;
     width:800px;
     margin:10px auto;

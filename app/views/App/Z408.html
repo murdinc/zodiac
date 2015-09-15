@@ -21,20 +21,7 @@
 </div>
 
 <div class="cipher" style="font-size:50px">
-
     {{.cipher}}
-
-    </br>
-    {{range $index, $char := .cipher}}
-        {{ if $index }}
-            {{ $char }} 
-        {{ else }}
-            ### {{ $char }}
-
-        {{ end }}
-    {{ end }}
-
-
 </div>
 
 {{template "footer.html" .}}
