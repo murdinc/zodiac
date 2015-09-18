@@ -4,7 +4,13 @@
 
 <h1>Zodiac Cipher</h1>
 
-<h3>340 Characters</h3>
+<h3>{{ $.cipher.Length}} Characters</h3>
+
+{{ if $.cipher.Solved }}
+<h3>Solved</h3>
+{{ else }}
+<h3>Unsolved</h3>
+{{ end }}
 
 <div class="nav">
 Previous (abcdef1234) | Current (abcdef5678) | Next (fedcba98765)

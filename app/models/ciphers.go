@@ -1,20 +1,33 @@
 package models
 
+import (
+	"strings"
+)
+
 type Cipher struct {
-	Name     string
-	Length   int
-	Cols     int
-	Rows     int
-	Symbols  []rune // The actual cipher
-	Solution Solution
+	Name        string
+	Length      int
+	Cols        int
+	Rows        int
+	Symbols     []rune // The actual cipher
+	Translation string
+	Solved      bool
 }
 
-func NewCipher(str string, cols int) *Cipher {
+type Character struct {
+	Symbol    string
+	Letter    string
+	EndOfWord bool
+}
+
+func NewCipher(str string, cols int, solved bool, translation string) *Cipher {
 	c := new(Cipher)
 	c.Symbols = []rune(str)
 	c.Length = len(str)
 	c.Cols = cols
 	c.Rows = c.Length / c.Cols
+	c.Solved = solved
+	c.Translation = translation
 	return c
 }
 
@@ -30,13 +43,16 @@ func (c *Cipher) GetCols() int {
 	return c.Cols
 }
 
-func (c *Cipher) Display() [][]string {
+func (c *Cipher) Display() [][]Character {
 
-	d := make([][]string, c.Rows) // Outer Lasyer: Rows
+	t := []byte(strings.Replace(c.Translation, " ", "", -1))
+
+	d := make([][]Character, c.Rows) // Outer Lasyer: Rows
 	for i := range d {
-		d[i] = make([]string, c.Cols) // Inner Layer; Cols
+		d[i] = make([]Character, c.Cols) // Inner Layer; Cols
 		for j := range d[i] {
-			d[i][j] = string(c.Symbols[j+((i)*c.Cols)])
+			d[i][j].Symbol = string(c.Symbols[j+((i)*c.Cols)])
+			d[i][j].Letter = string(t[j+((i)*c.Cols)])
 		}
 	}
 

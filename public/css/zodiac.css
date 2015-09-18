@@ -18,15 +18,17 @@ body {
 }
 
 h1 {
-    font-size: 68px;
+    font-size: 178px;
     transform: rotate(90deg);
     transform-origin: left top 0;
     position: absolute;
     margin: 0;
+    color :#D25959;
 }
 
 h3 {
     font-size: 28px;
+    color: #A67E9A;
 }
 
 .nav {

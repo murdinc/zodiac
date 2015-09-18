@@ -1,37 +1,36 @@
-{{set . "title" "Zodiac Decipher"}}
+{{set . "title" "Zodiac Ciphers"}}
 {{template "header.html" .}}
 
 
+<h1>Zodiac Cipher</h1>
 
-    <div class="row">
-      <div class="large-13 columns">
-          <h1>Zodiac Decipher</h1>
-      </div>
-    </div>
-    
-    <div class="row">
-      <div class="large-13 columns">
-        <div class="panel">
-          <h3>Test Cipher: </h3>
-          <div class="row">
-            <div class="large-10 medium-10 columns">
-                    <div class="cipher">
-                    {{range $row := $.cipher.Display}}
-                    <p> {{ range $char := $row }}{{ $char }}{{ end }} </p>
-                    {{ end }}
-                    </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<h3>{{ $.cipher.Length}} Characters</h3>
 
-    <div class="container">
-        <div class="row">
-            <div class="span6">
-                {{template "flash.html" .}}
-            </div>
-        </div>
-    </div>
+{{ if $.cipher.Solved }}
+<h3>Solved</h3>
+{{ else }}
+<h3>Unsolved</h3>
+{{ end }}
 
-    {{template "footer.html" .}}
+<div class="nav">
+Previous (abcdef1234) | Current (abcdef5678) | Next (fedcba98765)
+</div>
+
+</br>
+
+<div class="translation">
+    {{ $.cipher.Translation }} 
+</div>
+
+<div class="cipher">
+    {{range $row := $.cipher.Display}}
+    <div class="row-grouping">
+        <p class="symbols"> {{ range $char := $row }}<span class="char">{{ $char.Symbol }}</span>{{ end }} </p>
+        <p class="letters"> {{ range $char := $row }}<span class="char">{{ $char.Letter }}</span>{{ end }} </p>
+    </div>
+    {{ end }}
+</div>
+
+{{template "flash.html" .}}
+
+{{template "footer.html" .}}
