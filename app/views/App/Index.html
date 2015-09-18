@@ -1,40 +1,24 @@
-{{set . "title" "Zodiac Decipher"}}
+{{set . "title" "Zodiac Ciphers"}}
 {{template "header.html" .}}
 
-<header class="top-bar">
-  <div class="container">
-    <div class="row">
-      <div class="hero-text">
-        <h1>Zodiac Decipher</h1>
-        <p></p>
-      </div>
-    </div>
-  </div>
-</header>
 
-<div class="container">
-  <div class="row">
-    <div class="span6">
-      {{template "flash.html" .}}
-    </div>
-  </div>
+<h1>Zodiac Cipher</h1>
+
+<h3>340 Characters</h3>
+
+<div class="nav">
+Previous (abcdef1234) | Current (abcdef5678) | Next (fedcba98765)
 </div>
 
-<div class="cipher" style="font-size:50px">
-
-    {{.cipher}}
-
-    </br>
-    {{range $index, $char := .cipher}}
-        {{ if $index }}
-            {{ $char }} 
-        {{ else }}
-            ### {{ $char }}
-
-        {{ end }}
+<div class="cipher">
+    {{range $row := $.cipher.Display}}
+        <div class="row-grouping">
+            <p class="symbols"> {{ range $char := $row }}<span class="char">{{ $char }}</span>{{ end }} </p>
+            <p class="letters"> {{ range $char := $row }}<span class="char">{{ $char }}</span>{{ end }} </p>
+        </div>
     {{ end }}
-
-
 </div>
+
+{{template "flash.html" .}}
 
 {{template "footer.html" .}}

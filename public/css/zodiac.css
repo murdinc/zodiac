@@ -6,43 +6,60 @@
     font-style: normal;
 }
 
+html, body {
+    width: 100%;
+}
 body {
-    background-color:white;
-    font-family:Verdana,Tahoma,Arial,Sans-Serif;
-    color:black;
-    font-size:12px;
+    background-color: white;
+    color: black;
+    font-family: 'Helvetica', Helvetica, sans-serif;
+    max-width: 1080px;
+    margin: 1em auto;
 }
 
-.top-bar {
-    background-color:#000;
-    margin-bottom: 10px;
-
+h1 {
+    font-size: 68px;
+    transform: rotate(90deg);
+    transform-origin: left top 0;
+    position: absolute;
+    margin: 0;
 }
 
-.top-bar h1 {
-    margin-bottom: 0;
-    font-size: 20px;
-    line-height: 1;
-    letter-spacing: -1px;
-    color: #FFF;
+h3 {
+    font-size: 28px;
 }
+
+.nav {
+    
+}
+
 
 .cipher {
+    margin: 1em auto;
+    text-align: left;
+}
+.cipher span {
+    display: inline-block;
+    width: 32px;
+    border: 1px solid rgba(0,0,0,.5);
+    text-align: center;
+}
+.cipher span.end-of-word {
+    border-right-color: red;
+}
+.row-grouping {
+    margin: 16px;
+}
+.row-grouping p {
+    margin: 0;
+}
+
+.symbols {
     font-family:'Zodiac Cipher',Sans-Serif;
-    width:800px;
-    margin:10px auto;
-    text-align:left;
-    border:1px solid #99F;
-    padding:20px;
+    font-size: 32px;
 }
-
-.plain {
-    font-family:'Conv_Sansus Webissimo-Regular',Sans-Serif;
-    width:800px;
-    margin:10px auto;
-    text-align:left;
-    border:1px;
-    padding:10px;
+.letters {
+    font-family: 'Helvetica', Helvetica, sans-serif;
+    font-size: 24px;
+    text-transform: uppercase;
 }
-
-

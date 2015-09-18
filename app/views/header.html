@@ -1,19 +1,17 @@
-<!DOCTYPE html>
-
-<html>
+<!doctype html>
+<html class="no-js" lang="en">
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{.title}}</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <link rel="stylesheet" type="text/css" href="/public/css/bootstrap.css">
-    <link rel="stylesheet" type="text/css" href="/public/css/zodiac.css">
-    <link rel="stylesheet" type="text/css" href="/public/css/fonts.css" charset="utf-8" />
-    <link rel="shortcut icon" type="image/png" href="/public/img/favicon.png">
-    <script src="/public/js/jquery-1.9.1.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="/public/css/zodiac.css" />
+
     {{range .moreStyles}}
-      <link rel="stylesheet" type="text/css" href="/public/{{.}}">
+    <link rel="stylesheet" type="text/css" href="/public/{{.}}">
     {{end}}
     {{range .moreScripts}}
-      <script src="/public/{{.}}" type="text/javascript" charset="utf-8"></script>
+    <script src="/public/{{.}}" type="text/javascript" charset="utf-8"></script>
     {{end}}
+
   </head>
   <body>

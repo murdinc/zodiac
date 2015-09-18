@@ -1,27 +1,37 @@
 {{set . "title" "Zodiac Decipher"}}
 {{template "header.html" .}}
 
-<header class="top-bar">
-  <div class="container">
+
+
     <div class="row">
-      <div class="hero-text">
-        <h1>Zodiac Decipher</h1>
-        <p></p>
+      <div class="large-13 columns">
+          <h1>Zodiac Decipher</h1>
       </div>
     </div>
-  </div>
-</header>
-
-<div class="container">
-  <div class="row">
-    <div class="span6">
-      {{template "flash.html" .}}
+    
+    <div class="row">
+      <div class="large-13 columns">
+        <div class="panel">
+          <h3>Test Cipher: </h3>
+          <div class="row">
+            <div class="large-10 medium-10 columns">
+                    <div class="cipher">
+                    {{range $row := $.cipher.Display}}
+                    <p> {{ range $char := $row }}{{ $char }}{{ end }} </p>
+                    {{ end }}
+                    </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<div class="cipher" style="font-size:50px">
-    {{.cipher}}
-</div>
+    <div class="container">
+        <div class="row">
+            <div class="span6">
+                {{template "flash.html" .}}
+            </div>
+        </div>
+    </div>
 
-{{template "footer.html" .}}
+    {{template "footer.html" .}}
