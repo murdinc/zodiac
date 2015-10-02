@@ -12,6 +12,8 @@ type Cipher struct {
 	Symbols     []rune // The actual cipher
 	Translation string
 	Solved      bool
+	Key         map[string][]string
+	SymbolsKey  map[string][]string
 }
 
 type Character struct {
@@ -43,7 +45,7 @@ func (c *Cipher) GetCols() int {
 	return c.Cols
 }
 
-func (c *Cipher) Display() [][]Character {
+func (c *Cipher) DisplayCipher() [][]Character {
 
 	t := []byte(strings.Replace(c.Translation, " ", "", -1))
 
@@ -57,4 +59,56 @@ func (c *Cipher) Display() [][]Character {
 	}
 
 	return d
+}
+
+func (c *Cipher) DisplayKey() map[string][]string {
+	c.BuildKey()
+
+	return c.Key
+}
+
+func (c *Cipher) DisplaySymbols() map[string][]string {
+	c.BuildSymbols()
+
+	return c.SymbolsKey
+}
+
+func (c *Cipher) BuildKey() {
+
+	t := []byte(strings.Replace(c.Translation, " ", "", -1))
+
+	if c.Key == nil {
+		c.Key = make(map[string][]string)
+	}
+
+Loop:
+	for i, letter := range t {
+		nS := string(c.Symbols[i])
+		for _, existing := range c.Key[string(letter)] {
+			if existing == nS {
+				continue Loop
+			}
+		}
+		c.Key[string(letter)] = append(c.Key[string(letter)], nS)
+	}
+}
+
+func (c *Cipher) BuildSymbols() {
+
+	t := []byte(strings.Replace(c.Translation, " ", "", -1))
+
+	if c.SymbolsKey == nil {
+		c.SymbolsKey = make(map[string][]string)
+	}
+
+Loop:
+	for i, letter := range t {
+		nS := string(c.Symbols[i])
+		for _, existing := range c.Key[string(letter)] {
+			if existing == string(letter) {
+				continue Loop
+			}
+		}
+		c.SymbolsKey[nS] = append(c.SymbolsKey[nS], string(letter))
+	}
 }

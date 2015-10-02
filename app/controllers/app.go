@@ -1,8 +1,9 @@
 package controllers
 
 import (
-	"github.com/revel/revel"
 	"zodiac/app/models"
+
+	"github.com/revel/revel"
 )
 
 type App struct {

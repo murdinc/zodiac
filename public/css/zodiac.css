@@ -35,11 +35,23 @@ h3 {
     
 }
 
-
 .cipher {
     margin: 1em auto;
     text-align: left;
 }
+
+.key {
+    margin: 1em auto;
+    text-align: left;
+}
+
+.key span {
+    display: inline-block;
+    width: 32px;
+    border: 1px solid rgba(0,0,0,.5);
+    text-align: center;
+}
+
 .cipher span {
     display: inline-block;
     width: 32px;
