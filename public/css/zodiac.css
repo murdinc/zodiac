@@ -5,7 +5,13 @@
     font-weight: normal;
     font-style: normal;
 }
-
+* {
+    box-sizing: border-box;
+}
+*:after,
+*:before {
+    box-sizing: inherit;
+}
 html, body {
     width: 100%;
 }
@@ -32,9 +38,15 @@ h3 {
 }
 
 .nav {
-    
-}
 
+}
+main, aside {
+    display: inline-block;
+    vertical-align: top;
+}
+aside {
+    margin-left: 30px
+}
 .cipher {
     margin: 1em auto;
     text-align: left;
@@ -42,14 +54,20 @@ h3 {
 
 .key {
     margin: 1em auto;
-    text-align: left;
+    text-align: right;
 }
 
 .key span {
     display: inline-block;
     width: 32px;
+    height: 32px;
+    line-height: 32px;
     border: 1px solid rgba(0,0,0,.5);
     text-align: center;
+    vertical-align: middle;
+}
+.key .symbols {
+    line-height: 24px;
 }
 
 .cipher span {
@@ -67,7 +85,6 @@ h3 {
 .row-grouping p {
     margin: 0;
 }
-
 .symbols {
     font-family:'Zodiac Cipher',Sans-Serif;
     font-size: 32px;
@@ -77,3 +94,8 @@ h3 {
     font-size: 24px;
     text-transform: uppercase;
 }
+
+.translation {
+    word-wrap:break-word;
+}
+
