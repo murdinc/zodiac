@@ -32,9 +32,9 @@ Previous (abcdef1234) | Current (abcdef5678) | Next (fedcba98765)
 </main>
 
 <aside class="key">
-    {{range $symbol, $letter := $.cipher.DisplayKey}}
+    {{range $letter, $symbols := $.cipher.DisplayLettersKey}}
     <div class="row-grouping">
-        <p> <span class="symbols">{{ $symbol }}</span><span class="letters">{{ $letter }}</span> (8) [1]</p>
+        <p> <span class="letters">{{ $letter }}</span> [{{ $.cipher.GetSymbolCount $letter }}] {{ range $symbol := $symbols }}<span class="symbols">{{ $symbol }}</span>{{ end }}</p>
     </div>
     {{ end }}
 </aside>

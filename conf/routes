@@ -6,7 +6,8 @@ module:testrunner
 
 GET     /                                       App.Index
 GET     /Z408                                   App.Z408
-GET     /Z340                                   App.Z340
+GET     /Z340/random                            App.Z340(true)
+GET     /Z340                                   App.Z340(false)
 
 # Ignore favicon requests
 GET     /favicon.ico                            404
