@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"math/rand"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,8 +19,9 @@ type Cipher struct {
 	Solved          bool
 	Key             map[rune]rune
 	SymbolCount     map[rune]int
-	FoundWordsCount int
-	FoundWords      []string
+	FoundWordsTotal int
+	FoundWords      map[string]Word // map[word]count
+	WordLengths     map[int]int     // map[wordLength]count
 }
 
 type Character struct {
@@ -92,6 +94,13 @@ func (c *Cipher) GetCols() int {
 // Get the number of Rows
 func (c *Cipher) GetRows() int {
 	return c.Rows
+}
+
+// Find a word in a cipher
+func (c *Cipher) FindWord() int {
+	re := regexp.MustCompile("DO")
+	matches := re.FindAllString(c.Translation, -1)
+	return len(matches)
 }
 
 // Displays the Cipher
