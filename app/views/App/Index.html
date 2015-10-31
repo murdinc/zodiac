@@ -2,18 +2,15 @@
 {{template "header.html" .}}
 
 
-<h1>Zodiac Cipher</h1>
+<h1>Zodiac Ciphers</h1>
 
-<h3>{{ $.cipher.Length}} Characters</h3>
-
-{{ if $.cipher.Solved }}
-<h3>Solved</h3>
-{{ else }}
-<h3>Unsolved</h3>
-{{ end }}
 
 <div class="nav">
-Previous (abcdef1234) | Current (abcdef5678) | Next (fedcba98765)
+{{range $cipherLink := $.CipherLinks}}
+<h3>{{ $cipherLink.Name }} </h3>
+<a href="{{ $cipherLink.URL }}">View Cipher Page</a> <br/>
+
+{{ end }}
 </div>
 
 </br>

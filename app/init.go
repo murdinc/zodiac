@@ -23,6 +23,9 @@ func init() {
 	// ( order dependent )
 	// revel.OnAppStart(InitDB())
 	// revel.OnAppStart(FillCache())
+	revel.OnAppStart(func() {
+		//jobs.Schedule("@every 1s", GenerateKeys{})
+	})
 }
 
 // TODO turn this into revel.HeaderFilter
@@ -35,4 +38,13 @@ var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 	c.Response.Out.Header().Add("X-Content-Type-Options", "nosniff")
 
 	fc[0](c, fc[1:]) // Execute the next filter stage.
+}
+
+type GenerateKeys struct {
+}
+
+func (g GenerateKeys) Run() {
+	//revel.INFO.Print("Generating Keys...")
+	//cipher := NewCipher(revel.Config.StringDefault("cipher.408.raw", ""))
+
 }

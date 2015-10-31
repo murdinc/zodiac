@@ -3,11 +3,17 @@
 # ~~~~
 
 module:testrunner
+module:jobs
 
 GET     /                                       App.Index
-GET     /Z408                                   App.Z408
-GET     /Z340/random                            App.Z340(true)
-GET     /Z340                                   App.Z340(false)
+GET     /ciphers/deleteIndex/:indexName         App.DeleteCiphersIndex()
+
+GET     /cipher/:cipherName/hash/:hash          App.Display("hash")
+GET     /cipher/:cipherName/generate            App.Display("generate")
+GET     /cipher/:cipherName/newest              App.Display("newest")
+GET     /cipher/:cipherName/best                App.Display("best")
+GET     /cipher/:cipherName                     App.Display("best")
+
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

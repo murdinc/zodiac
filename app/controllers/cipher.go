@@ -1,9 +1,10 @@
 package controllers
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"math/rand"
-	"regexp"
-	"strings"
+	"sort"
 	"time"
 
 	"github.com/revel/revel"
@@ -17,18 +18,27 @@ type Cipher struct {
 	Symbols         []rune // The actual cipher
 	Translation     string // plain text translation
 	Solved          bool
-	Key             map[rune]rune
-	SymbolCount     map[rune]int
+	Key             []Character
+	KeyID           string
+	SymbolCount     map[string]int
 	FoundWordsTotal int
 	FoundWords      map[string]Word // map[word]count
 	WordLengths     map[int]int     // map[wordLength]count
 }
 
 type Character struct {
-	Symbol    string
-	Letter    string
-	EndOfWord bool
+	Symbol string
+	Letter string
 }
+
+type Key []Character
+
+func (k Key) Len() int      { return len(k) }
+func (k Key) Swap(i, j int) { k[i], k[j] = k[j], k[i] }
+
+type BySymbol struct{ Key }
+
+func (s BySymbol) Less(i, j int) bool { return s.Key[i].Symbol < s.Key[j].Symbol }
 
 type Letter struct {
 	letter    rune
@@ -36,43 +46,82 @@ type Letter struct {
 }
 
 // Creates a new Cipher struct and returns it.
-func NewCipher(str string) *Cipher {
+func NewCipher(name string, str string) *Cipher {
 	c := new(Cipher)
 
+	c.Name = name
 	c.Symbols = []rune(str)
 	c.Length = len(str)
-	c.SymbolCount = make(map[rune]int)
+	c.SymbolCount = make(map[string]int)
 
 	return c
 }
 
-// Set the Bool flag in the Cipher struct
+// Set the Solved flag in the Cipher struct
 func (c *Cipher) SetSolved(solved bool) {
 	c.Solved = solved
 }
 
-// Set the Key map in the Cipher struct
-func (c *Cipher) SetKey(key map[rune]rune) {
-	c.Key = key
-	c.doTranslation()
+// Set the Key in the Cipher struct from a given key map
+func (c *Cipher) SetKeyFromKeyMap(keyMap map[rune]rune) {
 
+	key := make([]Character, 0)
+
+	for symbol, letter := range keyMap {
+		key = append(key, Character{Letter: string(letter), Symbol: string(symbol)})
+	}
+	sort.Sort(BySymbol{key})
+
+	// Count Symbol Occurance
 	if len(c.SymbolCount) == 0 {
-		for _, letter := range c.Key {
-			c.incrementSymbolCount(letter)
+		for _, character := range c.Key {
+			c.incrementSymbolCount(character.Letter)
 		}
 	}
+
+	// Build a string of the sorted keys
+	sortedStringKey := ""
+	for _, character := range key {
+		sortedStringKey = sortedStringKey + character.Symbol + character.Letter
+	}
+
+	hasher := md5.New()
+	hasher.Write([]byte(sortedStringKey))
+
+	id := hex.EncodeToString(hasher.Sum(nil))
+
+	c.Key = key
+	c.KeyID = id
+	c.doTranslation()
+}
+
+// Set the Key in the Cipher struct from a given key map
+func (c *Cipher) SetKeyFromKeyDoc(keyDoc KeyDoc) {
+	c.Key = keyDoc.Key
+	c.Translation = keyDoc.Translation
+	c.KeyID = keyDoc.KeyID
 }
 
 // Do the translation from Symbol to Letter
 func (c *Cipher) doTranslation() {
 
-	temp := make([]rune, c.Length)
+	temp := ""
 
-	for s, symbol := range c.Symbols {
-		temp[s] = c.Key[symbol]
+	for _, symbol := range c.Symbols {
+		//temp[s] = rune(c.Key[symbol].Letter)
+	Loop:
+		for _, character := range c.Key {
+			if character.Symbol == string(symbol) {
+				temp = temp + character.Letter
+				break Loop
+			}
+		}
+
 	}
 
-	c.Translation = string(temp)
+	//c.Translation = string(temp)
+	c.Translation = temp
+
 }
 
 // Gets a Symbol given the index of it in the string
@@ -94,63 +143,6 @@ func (c *Cipher) GetCols() int {
 // Get the number of Rows
 func (c *Cipher) GetRows() int {
 	return c.Rows
-}
-
-// Find a word in a cipher
-func (c *Cipher) FindWord() int {
-	re := regexp.MustCompile("DO")
-	matches := re.FindAllString(c.Translation, -1)
-	return len(matches)
-}
-
-// Displays the Cipher
-func (c *Cipher) DisplayCipher() [][]Character {
-
-	t := []byte(strings.Replace(c.Translation, " ", "", -1))
-
-	d := make([][]Character, c.Rows) // Outer Lasyer: Rows
-	for i := range d {
-		d[i] = make([]Character, c.Cols) // Inner Layer; Cols
-		for j := range d[i] {
-			d[i][j].Symbol = string(c.Symbols[j+((i)*c.Cols)])
-			d[i][j].Letter = string(t[j+((i)*c.Cols)])
-		}
-	}
-
-	return d
-}
-
-// Build Symbols Key
-func (c *Cipher) DisplaySymbolsKey() map[string]string {
-
-	symbolsKey := make(map[string]string, c.Length)
-
-	for symbol, letter := range c.Key {
-		symbolsKey[string(symbol)] = string(letter)
-	}
-
-	return symbolsKey
-}
-
-// Build Letters Key
-func (c *Cipher) DisplayLettersKey() map[string][]string {
-
-	t := []byte(strings.Replace(c.Translation, " ", "", -1))
-
-	lettersKey := make(map[string][]string)
-
-Loop:
-	for i, letter := range t {
-		nS := string(c.Symbols[i])
-		for _, existing := range lettersKey[string(letter)] {
-			if existing == nS {
-				continue Loop
-			}
-		}
-		lettersKey[string(letter)] = append(lettersKey[string(letter)], nS)
-	}
-
-	return lettersKey
 }
 
 func BuildLetters() []Letter {
@@ -217,9 +209,9 @@ func (c *Cipher) RandomKey(cipherString []rune) map[rune]rune {
 
 		randomkey[symbol] = chosenOne.letter
 
-		c.incrementSymbolCount(chosenOne.letter)
+		c.incrementSymbolCount(string(chosenOne.letter))
 
-		if !chosenOne.reuseable || c.SymbolCount[chosenOne.letter] >= revel.Config.IntDefault("cipher.maxSymbols", 4) {
+		if !chosenOne.reuseable || c.SymbolCount[string(chosenOne.letter)] >= revel.Config.IntDefault("cipher.maxSymbols", 4) {
 			letters = append(letters[:0], letters[1:]...) // stop using this letter
 		}
 
@@ -228,7 +220,7 @@ func (c *Cipher) RandomKey(cipherString []rune) map[rune]rune {
 	return randomkey
 }
 
-func (c *Cipher) incrementSymbolCount(letter rune) {
+func (c *Cipher) incrementSymbolCount(letter string) {
 
 	switch c.SymbolCount[letter] {
 	case 0:
@@ -240,7 +232,7 @@ func (c *Cipher) incrementSymbolCount(letter rune) {
 }
 
 func (c *Cipher) GetSymbolCount(letter string) int {
-	return c.SymbolCount[rune(letter[0])]
+	return c.SymbolCount[string(letter[0])]
 }
 
 // Shuffle function used in random key generation

@@ -1,42 +1,117 @@
 package controllers
 
-import "github.com/revel/revel"
+import (
+	"errors"
+	"strings"
+
+	"github.com/revel/revel"
+)
 
 type App struct {
 	*revel.Controller
 }
 
+type CipherLink struct {
+	Name string
+	URL  string
+}
+
 func (c App) Index() revel.Result {
 
-	cipher := NewCipher(revel.Config.StringDefault("cipher.408.raw", ""))
+	cipherLinks := make([]CipherLink, 0)
 
-	cipher.SetCols(revel.Config.IntDefault("cipher.408.cols", 10))
-	cipher.SetSolved(revel.Config.BoolDefault("cipher.408.solved", false))
-	cipher.SetKey(cipher.Z408Key())
+	config := revel.Config.Options("cipher.")
 
-	return c.Render(cipher)
+	for _, str := range config {
+
+		if strings.HasSuffix(str, "Name") {
+			revel.INFO.Print(str)
+			name := revel.Config.StringDefault(str, "")
+			url := "/cipher/" + name
+			cipherLinks = append(cipherLinks, CipherLink{Name: name, URL: url})
+		}
+
+	}
+
+	return c.Render(cipherLinks)
 }
 
-func (c App) Z408() revel.Result {
+func (c App) Display(sort string) revel.Result {
 
-	cipher := NewCipher(revel.Config.StringDefault("cipher.408.raw", ""))
+	cipher, err := c.buildCipher()
+	if err != nil {
+		return c.RenderError(err)
+	}
 
-	cipher.SetCols(revel.Config.IntDefault("cipher.408.cols", 10))
-	cipher.SetSolved(revel.Config.BoolDefault("cipher.408.solved", false))
-	cipher.SetKey(cipher.Z408Key())
+	key := KeyDoc{}
+
+	switch sort {
+	case "newest":
+		revel.INFO.Print("Request to Display Latest Key for Cipher: " + cipher.Name)
+
+		key, err = GetNewestKey(cipher)
+		if err != nil {
+			return c.RenderError(err)
+		}
+		cipher.SetKeyFromKeyDoc(key)
+	case "best":
+		revel.INFO.Print("Request to Display Best Key for Cipher: " + cipher.Name)
+		key, err = GetBestKey(cipher)
+		if err != nil {
+			return c.RenderError(err)
+		}
+		cipher.SetKeyFromKeyDoc(key)
+	case "generate":
+		revel.INFO.Print("Request to Generate New Key and Display for Cipher: " + cipher.Name)
+		cipher.SetKeyFromKeyMap(cipher.RandomKey(cipher.Symbols))
+
+		CreateIndex()
+		IndexKey(cipher)
+	case "hash":
+		hash := c.Params.Get("hash")
+		revel.INFO.Print("Request to Display Key by hash for Cipher: " + cipher.Name + " Key: " + hash)
+
+		key, err = GetKeyByHash(hash)
+		if err != nil {
+			return c.RenderError(err)
+		}
+
+		cipher.SetKeyFromKeyDoc(key)
+	default:
+		// default TODO
+	}
 
 	return c.Render(cipher)
+
 }
 
-func (c App) Z340(random bool) revel.Result {
+func (c App) buildCipher() (*Cipher, error) {
+	cipherName := c.Params.Get("cipherName")
 
-	cipherString := revel.Config.StringDefault("cipher.340.raw", "")
+	cipherString := revel.Config.StringDefault("cipher."+cipherName+".raw", "")
+	if cipherString == "" {
+		return &Cipher{}, errors.New("Invalid Request for Cipher Page: " + cipherName)
+	}
 
-	cipher := NewCipher(cipherString)
+	cipher := NewCipher(cipherName, cipherString)
 
-	cipher.SetCols(revel.Config.IntDefault("cipher.340.cols", 10))
-	cipher.SetSolved(revel.Config.BoolDefault("cipher.340.solved", false))
-	cipher.SetKey(cipher.RandomKey(cipher.Symbols))
+	cipher.SetCols(revel.Config.IntDefault("cipher."+cipherName+".cols", 10))
+	cipher.SetSolved(revel.Config.BoolDefault("cipher."+cipherName+".solved", false))
 
-	return c.Render(cipher)
+	return cipher, nil
+
+}
+
+func (c App) DeleteCiphersIndex() revel.Result {
+
+	indexName := c.Params.Get("indexName")
+
+	revel.INFO.Print("Request delete Index: " + indexName)
+
+	resp, err := DeleteIndex(indexName)
+	if err != nil {
+		return c.RenderJson(err)
+	}
+
+	return c.RenderJson(resp)
 }
