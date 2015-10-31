@@ -5,7 +5,7 @@ This is a weekend/evening project to try and crack the unzolved Zodiac ciphers, 
 * All symbols only translate to one letter. 
 * Multiple symbols can represent the same letter. (i.e. commonly used letters)
 * The ciphers contain errors, either intentional or accidental. 
-* The method used to encipher both of codes messages is homophonic simple substitution. 
+* The method used to encipher both messages is homophonic simple substitution. 
 
 **Completed:**
 * Browser view of ciphers, with key and symbol to letter count
