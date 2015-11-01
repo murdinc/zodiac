@@ -12,6 +12,7 @@ GET     /cipher/:cipherName/hash/:hash          App.Display("hash")
 GET     /cipher/:cipherName/generate            App.Display("generate")
 GET     /cipher/:cipherName/newest              App.Display("newest")
 GET     /cipher/:cipherName/best                App.Display("best")
+GET     /cipher/:cipherName/solution            App.Display("solution")
 GET     /cipher/:cipherName                     App.Display("best")
 
 

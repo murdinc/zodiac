@@ -1,6 +1,12 @@
 package app
 
-import "github.com/revel/revel"
+import (
+	"time"
+
+	"github.com/murdinc/zodiac/app/controllers"
+	"github.com/revel/modules/jobs/app/jobs"
+	"github.com/revel/revel"
+)
 
 func init() {
 	// Filters is the default set of global filters.
@@ -25,6 +31,7 @@ func init() {
 	// revel.OnAppStart(FillCache())
 	revel.OnAppStart(func() {
 		//jobs.Schedule("@every 1s", GenerateKeys{})
+		jobs.In(time.Second, GenerateKeys{})
 	})
 }
 
@@ -44,7 +51,30 @@ type GenerateKeys struct {
 }
 
 func (g GenerateKeys) Run() {
-	//revel.INFO.Print("Generating Keys...")
-	//cipher := NewCipher(revel.Config.StringDefault("cipher.408.raw", ""))
+
+	controllers.CreateIndex()
+
+	wordList, err := controllers.GetWordList()
+	if err != nil {
+		return
+	}
+
+	go func(wordList controllers.WordList) {
+		for {
+
+			cipher, err := controllers.BuildCipher("Z408")
+			if err != nil {
+				return
+			}
+
+			revel.INFO.Print("Generating Random Key for Cipher: " + cipher.Name)
+
+			cipher.SetKeyFromKeyMap(cipher.RandomKey(cipher.Symbols))
+			cipher.ScanForWords(&wordList)
+
+			controllers.IndexKey(cipher)
+		}
+
+	}(*wordList)
 
 }

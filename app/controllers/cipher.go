@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"math/rand"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/revel/revel"
@@ -22,8 +23,8 @@ type Cipher struct {
 	KeyID           string
 	SymbolCount     map[string]int
 	FoundWordsTotal int
-	FoundWords      map[string]Word // map[word]count
-	WordLengths     map[int]int     // map[wordLength]count
+	FoundWords      WordList
+	WordLengths     map[int]int // map[wordLength]count
 }
 
 type Character struct {
@@ -100,6 +101,15 @@ func (c *Cipher) SetKeyFromKeyDoc(keyDoc KeyDoc) {
 	c.Key = keyDoc.Key
 	c.Translation = keyDoc.Translation
 	c.KeyID = keyDoc.KeyID
+	c.FoundWordsTotal = keyDoc.FoundWordsTotal
+	c.FoundWords = keyDoc.FoundWords
+
+	// Count Symbol Occurance
+	if len(c.SymbolCount) == 0 {
+		for _, character := range c.Key {
+			c.incrementSymbolCount(character.Letter)
+		}
+	}
 }
 
 // Do the translation from Symbol to Letter
@@ -108,7 +118,6 @@ func (c *Cipher) doTranslation() {
 	temp := ""
 
 	for _, symbol := range c.Symbols {
-		//temp[s] = rune(c.Key[symbol].Letter)
 	Loop:
 		for _, character := range c.Key {
 			if character.Symbol == string(symbol) {
@@ -119,7 +128,6 @@ func (c *Cipher) doTranslation() {
 
 	}
 
-	//c.Translation = string(temp)
 	c.Translation = temp
 
 }
@@ -143,6 +151,29 @@ func (c *Cipher) GetCols() int {
 // Get the number of Rows
 func (c *Cipher) GetRows() int {
 	return c.Rows
+}
+
+// Scan for words in our word list
+func (c *Cipher) ScanForWords(words *WordList) {
+	revel.INFO.Print("Scanning for words....")
+
+	foundWordsTotal := 0
+
+	foundWords := WordList{}
+
+	for _, word := range *words {
+		count := strings.Count(c.Translation, strings.ToUpper(word.Value))
+		if count > 0 {
+			//revel.INFO.Printf("Found [ %d ] occurances of [ %s ] in [ %s ]", count, word.Value, c.Name)
+			foundWordsTotal += count
+			foundWords = append(foundWords, Word{Value: word.Value, Count: count})
+		}
+	}
+
+	sort.Sort(ByCount{foundWords})
+	c.FoundWords = foundWords
+	c.FoundWordsTotal = foundWordsTotal
+
 }
 
 func BuildLetters() []Letter {
@@ -244,8 +275,8 @@ func Shuffle(a []Letter) {
 }
 
 // Returns the basic (my version) Key for the Z408 Cipher
-func (c *Cipher) Z408Key() map[rune]rune {
-	return map[rune]rune{
+func (c *Cipher) SetKeyFromZ408Solution() {
+	key := map[rune]rune{
 		'!':  'A',
 		'#':  'A',
 		'$':  'L',
@@ -301,4 +332,14 @@ func (c *Cipher) Z408Key() map[rune]rune {
 		'v':  'N',
 		'~':  'P',
 	}
+
+	c.SetKeyFromKeyMap(key)
+
+	// Count Symbol Occurance
+	if len(c.SymbolCount) == 0 {
+		for _, character := range c.Key {
+			c.incrementSymbolCount(character.Letter)
+		}
+	}
+
 }

@@ -38,7 +38,9 @@ func (c App) Index() revel.Result {
 
 func (c App) Display(sort string) revel.Result {
 
-	cipher, err := c.buildCipher()
+	cipherName := c.Params.Get("cipherName")
+
+	cipher, err := BuildCipher(cipherName)
 	if err != nil {
 		return c.RenderError(err)
 	}
@@ -65,8 +67,25 @@ func (c App) Display(sort string) revel.Result {
 		revel.INFO.Print("Request to Generate New Key and Display for Cipher: " + cipher.Name)
 		cipher.SetKeyFromKeyMap(cipher.RandomKey(cipher.Symbols))
 
+		wordList, err := GetWordList()
+		if err == nil {
+			// scan for words!
+			cipher.ScanForWords(wordList)
+		}
+
 		CreateIndex()
 		IndexKey(cipher)
+	case "solution":
+		revel.INFO.Print("Request to Display Cipher from Z408 Solution: " + cipher.Name)
+
+		cipher.SetKeyFromZ408Solution()
+
+		wordList, err := GetWordList()
+		if err == nil {
+			// scan for words!
+			cipher.ScanForWords(wordList)
+		}
+
 	case "hash":
 		hash := c.Params.Get("hash")
 		revel.INFO.Print("Request to Display Key by hash for Cipher: " + cipher.Name + " Key: " + hash)
@@ -85,8 +104,7 @@ func (c App) Display(sort string) revel.Result {
 
 }
 
-func (c App) buildCipher() (*Cipher, error) {
-	cipherName := c.Params.Get("cipherName")
+func BuildCipher(cipherName string) (*Cipher, error) {
 
 	cipherString := revel.Config.StringDefault("cipher."+cipherName+".raw", "")
 	if cipherString == "" {

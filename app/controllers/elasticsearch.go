@@ -10,13 +10,13 @@ import (
 )
 
 type KeyDoc struct {
-	CipherName  string
-	Translation string
-	Key         []Character
-	KeyID       string
-	WordCount   int
-	WordList    []string
-	Timestamp   int64
+	CipherName      string
+	Translation     string
+	Key             []Character
+	KeyID           string
+	FoundWordsTotal int
+	FoundWords      WordList
+	Timestamp       int64
 }
 
 func IndexKey(cipher *Cipher) {
@@ -31,11 +31,13 @@ func IndexKey(cipher *Cipher) {
 
 	// index, _type, id, args, data
 	_, err := c.Index(index, _type, cipher.KeyID, nil, KeyDoc{
-		Translation: cipher.Translation,
-		Key:         cipher.Key,
-		KeyID:       cipher.KeyID,
-		CipherName:  cipher.Name,
-		Timestamp:   time.Now().Unix(),
+		Translation:     cipher.Translation,
+		Key:             cipher.Key,
+		KeyID:           cipher.KeyID,
+		CipherName:      cipher.Name,
+		Timestamp:       time.Now().Unix(),
+		FoundWordsTotal: cipher.FoundWordsTotal,
+		FoundWords:      cipher.FoundWords,
 	})
 	if err != nil {
 		revel.ERROR.Print(err)
@@ -63,7 +65,7 @@ func GetNewestKey(cipher *Cipher) (KeyDoc, error) {
 }
 
 func GetBestKey(cipher *Cipher) (KeyDoc, error) {
-	resp, err := GetKeys(cipher, 1, 0, "WordCount")
+	resp, err := GetKeys(cipher, 1, 0, "FoundWordsTotal")
 
 	if err != nil || resp.Hits.Len() < 1 {
 		return KeyDoc{}, err
@@ -145,9 +147,9 @@ func GetKeys(cipher *Cipher, size int, from int, sort string) (elastigo.SearchRe
 						"order" : "desc"
 					}
 				}`
-	case "WordCount":
+	case "FoundWordsTotal":
 		searchJson = searchJson + `"sort" : {
-					"WordCount" : {
+					"FoundWordsTotal" : {
 						"order" : "desc"
 					}
 				}`
@@ -239,7 +241,7 @@ func CreateIndex() {
 						    "Timestamp": {
 						    	"type": "long"
 						    },
-						    "WordCount": {
+						    "FoundWordsTotal": {
 						        "type": "long"
 						    }
 						}
