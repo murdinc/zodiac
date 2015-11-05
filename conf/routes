@@ -12,7 +12,7 @@ module:jobs
 
 #########  INDEX OF CIPHERS
 GET     /                                       App.Index
-GET     /ciphers/deleteIndex/:indexName         App.DeleteCiphersIndex()
+# GET     /ciphers/deleteIndex/:indexName         App.DeleteCiphersIndex()
 
 ######### KEY BY HASH ID
 GET     /cipher/:cipherName/key/hash/:hash      App.Display("hash")

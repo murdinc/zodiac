@@ -189,7 +189,7 @@ func (c App) Display(sort string) revel.Result {
 	}
 
 	// Raw JSON responses
-	if c.Params.Values.Encode() == "" {
+	if c.Params.Values.Encode() == "application/json" {
 		if err != nil {
 			return c.RenderJson(err)
 		}
