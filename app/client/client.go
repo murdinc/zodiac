@@ -15,8 +15,8 @@ func main() {
 	fmt.Print("Generating Keys...\n")
 
 	minKill := 1
-	minWord := 40
-	maxSymbols := 9
+	minWord := 35
+	maxSymbols := 7
 
 	wordList, err := controllers.GetWordList("../words/")
 	if err != nil {
@@ -26,9 +26,8 @@ func main() {
 
 	jsonKeys := make(chan []byte)
 
-	var wg sync.WaitGroup
-
-	wg.Add(1)
+	var bro sync.WaitGroup
+	bro.Add(1)
 
 	for p := 0; p < 60; p++ {
 		go func(wordList controllers.WordList, minKill int, minWord int, maxSymbols int) {
@@ -77,12 +76,12 @@ func main() {
 		}
 	}()
 
-	wg.Wait()
+	bro.Wait() // lol good luck bro
 
 }
 
 func sendKey(key []byte) {
-	url := "http://localhost:9000/cipher/key"
+	url := "http://zodiac.sudoba.sh/cipher/key"
 
 	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(key))
 
@@ -97,7 +96,6 @@ func sendKey(key []byte) {
 	defer resp.Body.Close()
 
 	//body, _ := ioutil.ReadAll(resp.Body)
-
 	//fmt.Printf("Status: [%s] Response: [%s]\n", resp.Status, body)
 
 }

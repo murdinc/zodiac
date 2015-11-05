@@ -119,20 +119,21 @@ func (c App) Display(sort string) revel.Result {
 
 	switch sort {
 	case "date":
-		revel.INFO.Printf("Request to Display Latest Key for Cipher: [%s] starting from offset [%d]", cipher.Name, offset)
+		revel.INFO.Printf("Request to Display Latest Keys for Cipher: [%s] starting from offset [%d]", cipher.Name, offset)
 		key, err = es.GetKeyByDate(cipher, offset)
-		revel.INFO.Printf("KEY ID: %s", key.KeyID)
+
 		if err != nil {
 			return c.RenderError(err)
 		}
 
 		cipher.SetKeyFromKeyDoc(key)
 		nav.Visible = true
-		nav.Description = "Sorted By Date"
+		nav.Description = "Sorted By Kill Count & Date"
 
 	case "wordcount":
-		revel.INFO.Printf("Request to Display Best Key for Cipher: [%s] starting from offset [%d]", cipher.Name, offset)
+		revel.INFO.Printf("Request to Display Best Keys for Cipher: [%s] starting from offset [%d]", cipher.Name, offset)
 		key, err = es.GetKeyByWordcount(cipher, offset)
+
 		if err != nil {
 			return c.RenderError(err)
 		}
@@ -140,7 +141,7 @@ func (c App) Display(sort string) revel.Result {
 		cipher.SetKeyFromKeyDoc(key)
 
 		nav.Visible = true
-		nav.Description = "Sorted By Word Count"
+		nav.Description = "Sorted By Kill Count & Word Count"
 
 	case "generate":
 		revel.INFO.Print("Request to Generate New Key and Display for Cipher: " + cipher.Name)
@@ -163,7 +164,7 @@ func (c App) Display(sort string) revel.Result {
 		key.FoundWordsTotal = cipher.FoundWordsTotal
 
 	case "solution":
-		revel.INFO.Print("Request to Display Cipher from Z408 Solution: " + cipher.Name)
+		revel.INFO.Print("Request to Display Solution Key for Z408 Solution: " + cipher.Name)
 
 		key, err = cipher.Z408Solution()
 

@@ -150,12 +150,18 @@ func (es *ESDB) GetKeys(cipher *Cipher, size int, from int, sort string) (elasti
 	switch sort {
 	case "Timestamp":
 		searchJson = searchJson + `"sort" : {
+					"KillCount" : {
+						"order" : "desc"
+					},
 					"Timestamp" : {
 						"order" : "desc"
 					}
 				}`
 	case "FoundWordsTotal":
 		searchJson = searchJson + `"sort" : {
+					"KillCount" : {
+						"order" : "desc"
+					},
 					"FoundWordsTotal" : {
 						"order" : "desc"
 					}
