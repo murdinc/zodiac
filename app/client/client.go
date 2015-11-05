@@ -54,7 +54,7 @@ func main() {
 							key.FoundWordsTotal = cipher.FoundWordsTotal
 							key.FoundWords = cipher.FoundWords
 							key.KeyID = controllers.HashKey(cipher.Key)
-							key.Source = "client"
+							key.Source = "desktop"
 
 							json, err := json.Marshal(key)
 							if err == nil {
