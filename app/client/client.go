@@ -82,8 +82,8 @@ func main() {
 }
 
 func sendKey(key []byte) {
-	//url := "http://zodiac.sudoba.sh/cipher/key"
-	url := "http://localhost:9001/cipher/key"
+	url := "http://zodiac.sudoba.sh/cipher/key"
+	//url := "http://localhost:9001/cipher/key"
 
 	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(key))
 
