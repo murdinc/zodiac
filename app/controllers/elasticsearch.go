@@ -50,6 +50,7 @@ func (es *ESDB) IndexKey(cipher *Cipher) error {
 		FoundWordsTotal: cipher.FoundWordsTotal,
 		FoundWords:      cipher.FoundWords,
 		KillCount:       cipher.KillCount,
+		Source:          cipher.Source,
 	})
 
 	return err

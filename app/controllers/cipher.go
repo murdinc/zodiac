@@ -25,6 +25,7 @@ type Cipher struct {
 	FoundWords      WordList
 	WordLengths     map[int]int // map[wordLength]count
 	KillCount       int
+	Source          string
 }
 
 type KeyDoc struct {
@@ -36,6 +37,7 @@ type KeyDoc struct {
 	Key             []Character
 	FoundWordsTotal int
 	FoundWords      WordList
+	Source          string
 }
 
 type Character struct {
@@ -122,6 +124,7 @@ func (c *Cipher) SetKeyFromKeyDoc(keyDoc KeyDoc) {
 	c.FoundWordsTotal = keyDoc.FoundWordsTotal
 	c.FoundWords = keyDoc.FoundWords
 	c.KillCount = keyDoc.KillCount
+	c.Source = keyDoc.Source
 
 	// Count Symbol Occurance
 	if len(c.SymbolCount) == 0 {
@@ -276,6 +279,7 @@ func (c *Cipher) RandomKey(cipherString []rune, maxSymbols int) (KeyDoc, error) 
 		FoundWordsTotal: c.FoundWordsTotal,
 		FoundWords:      c.FoundWords,
 		KillCount:       c.KillCount,
+		Source:          "zodiac-server",
 	}
 
 	return keyDoc, nil
@@ -381,6 +385,7 @@ func (c *Cipher) Z408Solution() (KeyDoc, error) {
 		FoundWordsTotal: c.FoundWordsTotal,
 		FoundWords:      c.FoundWords,
 		KillCount:       c.KillCount,
+		Source:          "zodiac-server",
 	}
 
 	return keyDoc, nil

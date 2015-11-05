@@ -23,10 +23,12 @@ Key: [ {{ $.nav.Index}} / {{ $.nav.Total}} ] ({{ $.nav.Description }}) <br/><br/
 {{ end }}
 
 Key ID: [ {{ $.cipher.KeyID}} ] <br/>
+Source: [ {{ $.cipher.Source}} ] <br/><br/>
 
 Kill Count: [ {{ $.cipher.KillCount}} ] <br/>
 Found Words Total: [ {{ $.cipher.FoundWordsTotal}} ] <br/><br/>
 Found Words: {{range $word := $.cipher.FoundWords}}  "{{ $word.Value }}" ({{ $word.Count }}) - {{ end }} <br/>
+
 </div>
 
 </br>

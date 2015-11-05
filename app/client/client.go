@@ -54,6 +54,7 @@ func main() {
 							key.FoundWordsTotal = cipher.FoundWordsTotal
 							key.FoundWords = cipher.FoundWords
 							key.KeyID = controllers.HashKey(cipher.Key)
+							key.Source = "client"
 
 							json, err := json.Marshal(key)
 							if err == nil {
@@ -81,7 +82,8 @@ func main() {
 }
 
 func sendKey(key []byte) {
-	url := "http://zodiac.sudoba.sh/cipher/key"
+	//url := "http://zodiac.sudoba.sh/cipher/key"
+	url := "http://localhost:9001/cipher/key"
 
 	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(key))
 
