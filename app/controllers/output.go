@@ -24,7 +24,8 @@ func (c *Cipher) DisplayCipher() [][]Character {
 }
 
 func (c *Cipher) KeyCount() int {
-	count, err := GetKeyCount(c)
+	es := NewIndex(revel.Config.StringDefault("elasticsearch.host", "localhost"))
+	count, err := es.GetKeyCount(c)
 	if err != nil {
 		revel.ERROR.Print(err)
 	}

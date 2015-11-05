@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-
-	"github.com/revel/revel"
 )
 
 type WordList []Word
@@ -23,11 +21,9 @@ type ByCount struct{ WordList }
 
 func (c ByCount) Less(i, j int) bool { return c.WordList[i].Count > c.WordList[j].Count }
 
-func GetWordList() (*WordList, error) {
+func GetWordList(wordListDir string) (*WordList, error) {
 
-	wordListDir := revel.AppPath + "/words/"
-
-	revel.INFO.Print("Generating Words List from Folder: " + wordListDir)
+	//wordListDir := revel.AppPath + "/words/"
 
 	files, err := ioutil.ReadDir(wordListDir)
 	if err != nil {
@@ -40,21 +36,17 @@ func GetWordList() (*WordList, error) {
 
 		if strings.HasSuffix(strings.ToLower(file.Name()), ".txt") {
 
-			revel.INFO.Print("Reading file: " + file.Name())
-
 			wordFile, err := Open(wordListDir + file.Name())
 			if err != nil {
 				return &WordList{}, err
 			}
 
 			wordList = append(wordList, wordFile...)
-			//revel.INFO.Print(wordList)
+
 		}
 		// Deduper 4000™
 		wordList.removeDuplicates()
 	}
-
-	revel.INFO.Printf("Found [ %d ] Words!", len(wordList))
 
 	return &wordList, nil
 

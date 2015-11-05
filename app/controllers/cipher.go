@@ -3,12 +3,11 @@ package controllers
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"math/rand"
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/revel/revel"
 )
 
 type Cipher struct {
@@ -25,6 +24,18 @@ type Cipher struct {
 	FoundWordsTotal int
 	FoundWords      WordList
 	WordLengths     map[int]int // map[wordLength]count
+	KillCount       int
+}
+
+type KeyDoc struct {
+	CipherName      string
+	KeyID           string
+	Translation     string
+	Timestamp       int64
+	KillCount       int
+	Key             []Character
+	FoundWordsTotal int
+	FoundWords      WordList
 }
 
 type Character struct {
@@ -58,27 +69,10 @@ func NewCipher(name string, str string) *Cipher {
 	return c
 }
 
-// Set the Solved flag in the Cipher struct
-func (c *Cipher) SetSolved(solved bool) {
-	c.Solved = solved
-}
+// Generate MD5 hash from key data
+func HashKey(key []Character) string {
 
-// Set the Key in the Cipher struct from a given key map
-func (c *Cipher) SetKeyFromKeyMap(keyMap map[rune]rune) {
-
-	key := make([]Character, 0)
-
-	for symbol, letter := range keyMap {
-		key = append(key, Character{Letter: string(letter), Symbol: string(symbol)})
-	}
 	sort.Sort(BySymbol{key})
-
-	// Count Symbol Occurance
-	if len(c.SymbolCount) == 0 {
-		for _, character := range c.Key {
-			c.incrementSymbolCount(character.Letter)
-		}
-	}
 
 	// Build a string of the sorted keys
 	sortedStringKey := ""
@@ -91,8 +85,32 @@ func (c *Cipher) SetKeyFromKeyMap(keyMap map[rune]rune) {
 
 	id := hex.EncodeToString(hasher.Sum(nil))
 
+	return id
+}
+
+// Set the Solved flag in the Cipher struct
+func (c *Cipher) SetSolved(solved bool) {
+	c.Solved = solved
+}
+
+// Set the Key in the Cipher struct from a given key map
+func (c *Cipher) setKeyFromKeyMap(keyMap map[rune]rune) {
+
+	key := make([]Character, 0)
+
+	for symbol, letter := range keyMap {
+		key = append(key, Character{Letter: string(letter), Symbol: string(symbol)})
+	}
+
+	// Count Symbol Occurance
+	if len(c.SymbolCount) == 0 {
+		for _, character := range c.Key {
+			c.incrementSymbolCount(character.Letter)
+		}
+	}
+
 	c.Key = key
-	c.KeyID = id
+	c.KeyID = HashKey(key)
 	c.doTranslation()
 }
 
@@ -103,6 +121,7 @@ func (c *Cipher) SetKeyFromKeyDoc(keyDoc KeyDoc) {
 	c.KeyID = keyDoc.KeyID
 	c.FoundWordsTotal = keyDoc.FoundWordsTotal
 	c.FoundWords = keyDoc.FoundWords
+	c.KillCount = keyDoc.KillCount
 
 	// Count Symbol Occurance
 	if len(c.SymbolCount) == 0 {
@@ -129,6 +148,7 @@ func (c *Cipher) doTranslation() {
 	}
 
 	c.Translation = temp
+	c.KillCount = strings.Count(c.Translation, "KILL")
 
 }
 
@@ -155,16 +175,13 @@ func (c *Cipher) GetRows() int {
 
 // Scan for words in our word list
 func (c *Cipher) ScanForWords(words *WordList) {
-	revel.INFO.Print("Scanning for words....")
 
 	foundWordsTotal := 0
-
 	foundWords := WordList{}
 
 	for _, word := range *words {
 		count := strings.Count(c.Translation, strings.ToUpper(word.Value))
 		if count > 0 {
-			//revel.INFO.Printf("Found [ %d ] occurances of [ %s ] in [ %s ]", count, word.Value, c.Name)
 			foundWordsTotal += count
 			foundWords = append(foundWords, Word{Value: word.Value, Count: count})
 		}
@@ -197,7 +214,7 @@ Loop:
 }
 
 // Generates a Random Key, given a rune array of the cipher
-func (c *Cipher) RandomKey(cipherString []rune) map[rune]rune {
+func (c *Cipher) RandomKey(cipherString []rune, maxSymbols int) (KeyDoc, error) {
 
 	letters := BuildLetters()
 
@@ -220,7 +237,7 @@ func (c *Cipher) RandomKey(cipherString []rune) map[rune]rune {
 	}
 
 	if n == 0 {
-		return nil
+		return KeyDoc{}, errors.New("ERROR GENERATING RANDOM KEY!! ")
 	}
 
 	symbols := make([]rune, 0, n)
@@ -242,13 +259,26 @@ func (c *Cipher) RandomKey(cipherString []rune) map[rune]rune {
 
 		c.incrementSymbolCount(string(chosenOne.letter))
 
-		if !chosenOne.reuseable || c.SymbolCount[string(chosenOne.letter)] >= revel.Config.IntDefault("cipher.maxSymbols", 4) {
+		if !chosenOne.reuseable || c.SymbolCount[string(chosenOne.letter)] >= maxSymbols {
 			letters = append(letters[:0], letters[1:]...) // stop using this letter
 		}
 
 	}
 
-	return randomkey
+	c.setKeyFromKeyMap(randomkey)
+
+	keyDoc := KeyDoc{
+		Translation:     c.Translation,
+		Key:             c.Key,
+		KeyID:           c.KeyID,
+		CipherName:      c.Name,
+		Timestamp:       time.Now().Unix(),
+		FoundWordsTotal: c.FoundWordsTotal,
+		FoundWords:      c.FoundWords,
+		KillCount:       c.KillCount,
+	}
+
+	return keyDoc, nil
 }
 
 func (c *Cipher) incrementSymbolCount(letter string) {
@@ -275,7 +305,7 @@ func Shuffle(a []Letter) {
 }
 
 // Returns the basic (my version) Key for the Z408 Cipher
-func (c *Cipher) SetKeyFromZ408Solution() {
+func (c *Cipher) Z408Solution() (KeyDoc, error) {
 	key := map[rune]rune{
 		'!':  'A',
 		'#':  'A',
@@ -333,7 +363,7 @@ func (c *Cipher) SetKeyFromZ408Solution() {
 		'~':  'P',
 	}
 
-	c.SetKeyFromKeyMap(key)
+	c.setKeyFromKeyMap(key)
 
 	// Count Symbol Occurance
 	if len(c.SymbolCount) == 0 {
@@ -341,5 +371,18 @@ func (c *Cipher) SetKeyFromZ408Solution() {
 			c.incrementSymbolCount(character.Letter)
 		}
 	}
+
+	keyDoc := KeyDoc{
+		Translation:     c.Translation,
+		Key:             c.Key,
+		KeyID:           c.KeyID,
+		CipherName:      c.Name,
+		Timestamp:       time.Now().Unix(),
+		FoundWordsTotal: c.FoundWordsTotal,
+		FoundWords:      c.FoundWords,
+		KillCount:       c.KillCount,
+	}
+
+	return keyDoc, nil
 
 }

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/murdinc/zodiac/app/controllers"
-	"github.com/revel/modules/jobs/app/jobs"
 	"github.com/revel/revel"
 )
 
@@ -30,8 +29,7 @@ func init() {
 	// revel.OnAppStart(InitDB())
 	// revel.OnAppStart(FillCache())
 	revel.OnAppStart(func() {
-		//jobs.Schedule("@every 1s", GenerateKeys{})
-		jobs.In(time.Second, GenerateKeys{})
+		//jobs.In(time.Second, GenerateKeys{})
 	})
 }
 
@@ -47,34 +45,72 @@ var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 	fc[0](c, fc[1:]) // Execute the next filter stage.
 }
 
-type GenerateKeys struct {
-}
+type GenerateKeys struct{}
 
 func (g GenerateKeys) Run() {
 
-	controllers.CreateIndex()
+	revel.INFO.Print("Generating Random Keys...")
 
-	wordList, err := controllers.GetWordList()
+	minKill := revel.Config.IntDefault("app.killcount.min", 1)
+	minWord := revel.Config.IntDefault("app.wordcount.min", 40)
+	maxSymbols := revel.Config.IntDefault("cipher.maxSymbols", 4)
+
+	wordList, err := controllers.GetWordList(revel.AppPath + "/words/")
 	if err != nil {
 		return
 	}
 
-	go func(wordList controllers.WordList) {
-		for {
+	for p := 0; p < 60; p++ {
+		go func(wordList controllers.WordList, minKill int, minWord int, maxSymbols int) {
 
-			cipher, err := controllers.BuildCipher("Z408")
-			if err != nil {
-				return
+			es := controllers.NewIndex(revel.Config.StringDefault("elasticsearch.host", "localhost"))
+
+			for {
+
+				cipher, err := controllers.BuildCipher("Z408")
+				if err != nil {
+					return
+				}
+
+				key, err := cipher.RandomKey(cipher.Symbols, maxSymbols)
+
+				if err != nil {
+
+					cipher.SetKeyFromKeyDoc(key)
+
+					// Kill Count over Min, so scan for words!
+					if cipher.KillCount >= minKill {
+						cipher.ScanForWords(&wordList)
+
+						// Word count over Min, so store in ES
+						if cipher.FoundWordsTotal >= minWord {
+							revel.INFO.Printf("Key: [%s] - Kill Count: [%d] - Word Count: [%d]", cipher.KeyID, cipher.KillCount, cipher.FoundWordsTotal)
+							es.IndexKey(cipher)
+						}
+					}
+				}
+
 			}
 
-			revel.INFO.Print("Generating Random Key for Cipher: " + cipher.Name)
+		}(*wordList, minKill, minWord, maxSymbols)
+	}
 
-			cipher.SetKeyFromKeyMap(cipher.RandomKey(cipher.Symbols))
-			cipher.ScanForWords(&wordList)
+	// Key Count Avg
+	cipher, err := controllers.BuildCipher("Z408")
+	if err != nil {
+		return
+	}
 
-			controllers.IndexKey(cipher)
-		}
+	startCount := cipher.KeyCount()
+	currCount := 0
 
-	}(*wordList)
+	for {
+		time.Sleep(time.Minute)
+		currCount = cipher.KeyCount()
+		kpm := (currCount - startCount)
+
+		startCount = currCount
+		revel.INFO.Printf("[%d] Keys per minute", kpm)
+	}
 
 }

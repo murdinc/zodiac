@@ -5,15 +5,37 @@
 module:testrunner
 module:jobs
 
+
+
+
+
+
+#########  INDEX OF CIPHERS
 GET     /                                       App.Index
 GET     /ciphers/deleteIndex/:indexName         App.DeleteCiphersIndex()
 
-GET     /cipher/:cipherName/hash/:hash          App.Display("hash")
-GET     /cipher/:cipherName/generate            App.Display("generate")
-GET     /cipher/:cipherName/newest              App.Display("newest")
-GET     /cipher/:cipherName/best                App.Display("best")
-GET     /cipher/:cipherName/solution            App.Display("solution")
+######### KEY BY HASH ID
+GET     /cipher/:cipherName/key/hash/:hash      App.Display("hash")
+
+######### GENERATE AND INSERT NEW KEY
+GET     /cipher/:cipherName/key/generate        App.Display("generate")
+
+######### NEWEST KEY GENERATED
+GET     /cipher/:cipherName/key/date            App.Display("date")
+
+######### ACCEPTED SOLUTION
+GET     /cipher/:cipherName/key/solution        App.Display("solution")
+
+######### BEST KEY
+GET     /cipher/:cipherName/key/wordcount       App.Display("wordcount")
 GET     /cipher/:cipherName                     App.Display("best")
+
+######### RECEIVER OF KEYS
+PUT     /cipher/key                             App.PutKey
+
+
+
+
 
 
 # Ignore favicon requests

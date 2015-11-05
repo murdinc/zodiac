@@ -6,43 +6,13 @@
 
 
 <div class="nav">
-{{range $cipherLink := $.CipherLinks}}
+{{range $cipherLink := $.cipherLinks}}
 <h3>{{ $cipherLink.Name }} </h3>
-<a href="{{ $cipherLink.URL }}">View Cipher Page</a> <br/>
-
+<a href="{{ $cipherLink.ByCountURL }}">Keys sorted by Word Count</a> <br/>
+<a href="{{ $cipherLink.ByDateURL }}">Keys sorted by By Date</a> <br/>
 {{ end }}
 </div>
 
-</br>
-
-<div class="translation">
-    {{ $.cipher.Translation }}
-</div>
-
-<main class="cipher">
-    {{range $row := $.cipher.DisplayCipher}}
-    <div class="row-grouping">
-        <p class="symbols"> {{ range $char := $row }}<span class="char">{{ $char.Symbol }}</span>{{ end }} </p>
-        <p class="letters"> {{ range $char := $row }}<span class="char">{{ $char.Letter }}</span>{{ end }} </p>
-    </div>
-    {{ end }}
-</main>
-
-<aside class="key">
-    {{range $symbol, $letter := $.cipher.DisplaySymbolsKey}}
-    <div class="row-grouping">
-        <p> <span class="symbols">{{ $symbol }}</span><span class="letters">{{ $letter }}</span> (8) [1]</p>
-    </div>
-    {{ end }}
-</aside>
-
-<aside class="key">
-    {{range $letter, $symbols := $.cipher.DisplayLettersKey}}
-    <div class="row-grouping">
-        <p> <span class="letters">{{ $letter }}</span>{{ range $symbol := $symbols }}<span class="symbols">{{ $symbol }}</span>{{ end }} (8) [1]</p>
-    </div>
-    {{ end }}
-</aside>
 
 {{template "flash.html" .}}
 

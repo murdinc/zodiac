@@ -2,35 +2,46 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/mattbaird/elastigo/lib"
-	"github.com/revel/revel"
 )
 
-type KeyDoc struct {
-	CipherName      string
-	Translation     string
-	Key             []Character
-	KeyID           string
-	FoundWordsTotal int
-	FoundWords      WordList
-	Timestamp       int64
+type ESDB struct {
+	Conn  *elastigo.Conn
+	Index string
+	Type  string
 }
 
-func IndexKey(cipher *Cipher) {
+func (k KeyDoc) RenderJSON() string {
+	json, err := json.MarshalIndent(k, "", "    ")
+	if err != nil {
+		return ""
+	}
+	return string(json)
+}
 
-	c := elastigo.NewConn()
+func NewIndex(domain string) *ESDB {
+	es := new(ESDB)
+
+	es.Conn = elastigo.NewConn()
 
 	// Set the Elasticsearch Host to Connect to
-	c.Domain = revel.Config.StringDefault("elasticsearch.host", "localhost")
+	es.Conn.Domain = domain
+	es.Index = "cipher_keys"
+	es.Type = "key_doc"
 
-	index := "cipher_keys"
-	_type := "key_doc"
+	es.createIndex()
+
+	return es
+}
+
+func (es *ESDB) IndexKey(cipher *Cipher) error {
 
 	// index, _type, id, args, data
-	_, err := c.Index(index, _type, cipher.KeyID, nil, KeyDoc{
+	_, err := es.Conn.Index(es.Index, es.Type, cipher.KeyID, nil, KeyDoc{
 		Translation:     cipher.Translation,
 		Key:             cipher.Key,
 		KeyID:           cipher.KeyID,
@@ -38,72 +49,76 @@ func IndexKey(cipher *Cipher) {
 		Timestamp:       time.Now().Unix(),
 		FoundWordsTotal: cipher.FoundWordsTotal,
 		FoundWords:      cipher.FoundWords,
+		KillCount:       cipher.KillCount,
 	})
-	if err != nil {
-		revel.ERROR.Print(err)
-	}
+
+	return err
 
 }
 
-func GetNewestKey(cipher *Cipher) (KeyDoc, error) {
-	resp, err := GetKeys(cipher, 1, 0, "Timestamp")
+func (es *ESDB) IndexKeyDoc(keyDoc KeyDoc) error {
+
+	// index, _type, id, args, data
+	_, err := es.Conn.Index(es.Index, es.Type, keyDoc.KeyID, nil, keyDoc)
+
+	return err
+
+}
+
+func (es *ESDB) GetKeyByDate(cipher *Cipher, offset int) (KeyDoc, error) {
+
+	keyDoc := KeyDoc{}
+
+	resp, err := es.GetKeys(cipher, 1, offset, "Timestamp")
 
 	if err != nil || resp.Hits.Len() < 1 {
-		return KeyDoc{}, err
+		return keyDoc, errors.New("No Keys Found!")
 	}
 
 	hit, err := resp.Hits.Hits[0].Source.MarshalJSON()
 	if err != nil {
-		return KeyDoc{}, err
+		return keyDoc, err
 	}
-
-	keyDoc := KeyDoc{}
 
 	json.Unmarshal(hit, &keyDoc)
 
 	return keyDoc, nil
 }
 
-func GetBestKey(cipher *Cipher) (KeyDoc, error) {
-	resp, err := GetKeys(cipher, 1, 0, "FoundWordsTotal")
+func (es *ESDB) GetKeyByWordcount(cipher *Cipher, offset int) (KeyDoc, error) {
+
+	keyDoc := KeyDoc{}
+
+	resp, err := es.GetKeys(cipher, 1, offset, "FoundWordsTotal")
 
 	if err != nil || resp.Hits.Len() < 1 {
-		return KeyDoc{}, err
+		return keyDoc, errors.New("No Keys Found!")
 	}
 
 	hit, err := resp.Hits.Hits[0].Source.MarshalJSON()
 	if err != nil {
-		return KeyDoc{}, err
+		return keyDoc, err
 	}
-
-	keyDoc := KeyDoc{}
 
 	json.Unmarshal(hit, &keyDoc)
 
 	return keyDoc, nil
 }
 
-func GetKeyByHash(hash string) (KeyDoc, error) {
-	c := elastigo.NewConn()
+func (es *ESDB) GetKeyByHash(hash string) (KeyDoc, error) {
 
-	// Set the Elasticsearch Host to Connect to
-	c.Domain = revel.Config.StringDefault("elasticsearch.host", "localhost")
+	keyDoc := KeyDoc{}
 
-	index := "cipher_keys"
-	_type := "key_doc"
-
-	resp, err := c.Get(index, _type, hash, nil)
+	resp, err := es.Conn.Get(es.Index, es.Type, hash, nil)
 	if err != nil {
-		return KeyDoc{}, err
+		return keyDoc, err
 	}
 
 	hit, err := resp.Source.MarshalJSON()
 
 	if err != nil {
-		return KeyDoc{}, err
+		return keyDoc, err
 	}
-
-	keyDoc := KeyDoc{}
 
 	json.Unmarshal(hit, &keyDoc)
 
@@ -111,15 +126,7 @@ func GetKeyByHash(hash string) (KeyDoc, error) {
 
 }
 
-func GetKeys(cipher *Cipher, size int, from int, sort string) (elastigo.SearchResult, error) {
-
-	c := elastigo.NewConn()
-
-	// Set the Elasticsearch Host to Connect to
-	c.Domain = revel.Config.StringDefault("elasticsearch.host", "localhost")
-
-	index := "cipher_keys"
-	_type := "key_doc"
+func (es *ESDB) GetKeys(cipher *Cipher, size int, from int, sort string) (elastigo.SearchResult, error) {
 
 	searchJson := `{
 			"from" : ` + fmt.Sprint(from) + `,
@@ -157,19 +164,11 @@ func GetKeys(cipher *Cipher, size int, from int, sort string) (elastigo.SearchRe
 
 	searchJson = searchJson + `}`
 
-	return c.Search(index, _type, nil, searchJson)
+	return es.Conn.Search(es.Index, es.Type, nil, searchJson)
 
 }
 
-func GetKeyCount(cipher *Cipher) (int, error) {
-
-	c := elastigo.NewConn()
-
-	// Set the Elasticsearch Host to Connect to
-	c.Domain = revel.Config.StringDefault("elasticsearch.host", "localhost")
-
-	index := "cipher_keys"
-	_type := "key_doc"
+func (es *ESDB) GetKeyCount(cipher *Cipher) (int, error) {
 
 	searchJson := `{
     	"query": {
@@ -189,34 +188,21 @@ func GetKeyCount(cipher *Cipher) (int, error) {
 		}
 	}`
 
-	resp, err := c.Count(index, _type, nil, searchJson)
+	resp, err := es.Conn.Count(es.Index, es.Type, nil, searchJson)
 
 	return resp.Count, err
 
 }
 
-func DeleteIndex(index string) (elastigo.BaseResponse, error) {
+func (es *ESDB) DeleteIndex(index string) (elastigo.BaseResponse, error) {
 
-	c := elastigo.NewConn()
-
-	// Set the Elasticsearch Host to Connect to
-	c.Domain = revel.Config.StringDefault("elasticsearch.host", "localhost")
-
-	return c.DeleteIndex(index)
+	return es.Conn.DeleteIndex(index)
 }
 
-func CreateIndex() {
-
-	c := elastigo.NewConn()
-
-	// Set the Elasticsearch Host to Connect to
-	c.Domain = revel.Config.StringDefault("elasticsearch.host", "localhost")
-
-	index := "cipher_keys"
-	_type := "key_doc"
+func (es *ESDB) createIndex() error {
 
 	mapping := `{
-					"` + _type + `": {
+					"` + es.Type + `": {
 						"_id": {
 							"index": "analyzed",
 							"path": "id"
@@ -248,11 +234,8 @@ func CreateIndex() {
 					}
 				}`
 
-	c.CreateIndex(index)
+	es.Conn.CreateIndex(es.Index)
 
-	err := c.PutMappingFromJSON(index, _type, []byte(mapping))
-	if err != nil {
-		revel.ERROR.Print(err)
-	}
+	return es.Conn.PutMappingFromJSON(es.Index, es.Type, []byte(mapping))
 
 }

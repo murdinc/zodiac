@@ -13,8 +13,18 @@
 {{ end }}
 
 <div class="nav">
+{{ if $.nav.Visible }}
+{{ if ($.nav.Previous) gt -1 }}
+<a href="?index={{ $.nav.Previous }}">Previous</a> {{ else }} Previous {{ end }}
+/
+{{ if (($.nav.Next) lt $.cipher.KeyCount) }} <a href="?index={{ $.nav.Next }}">Next</a> {{ else }} Next {{ end }}<br/>
+Key: [ {{ $.nav.Index}} / {{ $.nav.Total}} ] ({{ $.nav.Description }}) <br/><br/>
+
+{{ end }}
+
 Key ID: [ {{ $.cipher.KeyID}} ] <br/>
-Key Count: [ {{ $.cipher.KeyCount}} ] <br/>
+
+Kill Count: [ {{ $.cipher.KillCount}} ] <br/>
 Found Words Total: [ {{ $.cipher.FoundWordsTotal}} ] <br/><br/>
 Found Words: {{range $word := $.cipher.FoundWords}}  "{{ $word.Value }}" ({{ $word.Count }}) - {{ end }} <br/>
 </div>
@@ -41,6 +51,10 @@ Found Words: {{range $word := $.cipher.FoundWords}}  "{{ $word.Value }}" ({{ $wo
     </div>
     {{ end }}
 </aside>
+
+<textarea rows="10" cols="200">
+{{ $.key.RenderJSON }}
+</textarea>
 
 {{template "flash.html" .}}
 
