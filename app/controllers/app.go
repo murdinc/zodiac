@@ -54,7 +54,7 @@ func (c App) PutKey() revel.Result {
 
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		return c.RenderJson(err)
+		return c.RenderJSON(err)
 	}
 
 	key := KeyDoc{}
@@ -66,11 +66,11 @@ func (c App) PutKey() revel.Result {
 
 		revel.INFO.Printf("Got Key [%s] for Cipher [%s] from Host [%s]", key.KeyID, key.CipherName, c.Request.Host)
 
-		return c.RenderJson(true)
+		return c.RenderJSON(true)
 	}
 
 	revel.ERROR.Printf("Got Invalid Key [%s] for Cipher [%s] from Host [%s]", key.KeyID, key.CipherName, c.Request.Host)
-	return c.RenderJson("Invalid Key Hash!")
+	return c.RenderJSON("Invalid Key Hash!")
 
 }
 
@@ -192,10 +192,10 @@ func (c App) Display(sort string) revel.Result {
 	// Raw JSON responses
 	if c.Params.Values.Encode() == "application/json" {
 		if err != nil {
-			return c.RenderJson(err)
+			return c.RenderJSON(err)
 		}
 
-		return c.RenderJson(key)
+		return c.RenderJSON(key)
 	}
 
 	// Default View
@@ -234,8 +234,8 @@ func (c App) DeleteCiphersIndex() revel.Result {
 
 	resp, err := es.DeleteIndex(indexName)
 	if err != nil {
-		return c.RenderJson(err)
+		return c.RenderJSON(err)
 	}
 
-	return c.RenderJson(resp)
+	return c.RenderJSON(resp)
 }
